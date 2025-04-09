@@ -11,3 +11,14 @@ serde.workspace = true
 serde_json.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
+
+[dev-dependencies]
+mockall = "0.13.1"
+
+[[bin]]
+name = "load_students"
+path = "bin/load_students.rs"
+
+[[bin]]
+name = "load_courses"
+path = "bin/load_courses.rs"

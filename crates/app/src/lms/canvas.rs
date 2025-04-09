@@ -3,7 +3,6 @@ use reqwest::{
     Client as ReqClient,
     header::{HeaderMap, HeaderValue},
 };
-use serde::Deserialize;
 
 pub struct Client {
     base_url: String,
@@ -28,21 +27,6 @@ impl Client {
     }
 }
 
-#[derive(Deserialize)]
-struct Observee {
-    pub id: i32,
-    pub name: String,
-}
-
-impl From<&Observee> for dto::Student {
-    fn from(observee: &Observee) -> Self {
-        Self {
-            id: observee.id.to_string(),
-            name: observee.name.clone(),
-        }
-    }
-}
-
 impl Lms for Client {
     async fn get_students(&self) -> anyhow::Result<Vec<dto::Student>> {
         let url = format!("{}/api/v1/users/self/observees", self.base_url);
@@ -51,11 +35,24 @@ impl Lms for Client {
             .get(url)
             .send()
             .await?
-            .json::<Vec<Observee>>()
+            .json::<Vec<dto::Student>>()
+            .await?;
+
+        Ok(resp)
+    }
+
+    async fn get_active_courses(&self, account_id: i64) -> anyhow::Result<Vec<dto::Course>> {
+        let url = format!(
+            "{}/api/v1/users/{}/courses?enrollment_state=active",
+            self.base_url, account_id
+        );
+        let resp = self
+            .client
+            .get(url)
+            .send()
             .await?
-            .iter()
-            .map(dto::Student::from)
-            .collect::<Vec<dto::Student>>();
+            .json::<Vec<dto::Course>>()
+            .await?;
 
         Ok(resp)
     }
