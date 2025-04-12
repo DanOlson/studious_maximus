@@ -2,7 +2,7 @@ use db::SqlDatabase;
 #[allow(unused)]
 use lms::Lms;
 use lms::canvas;
-use models::{Course, EnrollmentStatus, Student};
+use models::{Assignment, Course, EnrollmentStatus, Student};
 use sqlx::SqlitePool;
 
 mod db;
@@ -72,6 +72,39 @@ where
                         student_id: student.id,
                         name: c.name,
                         enrollment_status: EnrollmentStatus::Active,
+                    })
+                    .collect(),
+            };
+            self.database.query(&update).await?;
+        }
+
+        Ok(())
+    }
+
+    pub async fn get_assignments(&self) -> anyhow::Result<Vec<Assignment>> {
+        let query = query::AssignmentsQuery;
+        let assignments = self.database.query(&query).await?;
+
+        Ok(assignments)
+    }
+
+    pub async fn update_assignments(&self) -> anyhow::Result<()> {
+        let courses = self.get_courses().await?;
+        for course in courses {
+            println!("getting assignments for course {course:?}");
+            let assignments = self
+                .lms
+                .get_course_assignments(course.student_id, course.id)
+                .await?;
+            let update = query::UpdateAssignments {
+                assignments: assignments
+                    .into_iter()
+                    .map(|a| models::Assignment {
+                        id: a.id as i64,
+                        student_id: course.student_id,
+                        course_id: course.id,
+                        name: a.name.clone(),
+                        due_at: a.due_at.clone(),
                     })
                     .collect(),
             };

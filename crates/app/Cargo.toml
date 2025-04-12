@@ -22,3 +22,7 @@ path = "bin/load_students.rs"
 [[bin]]
 name = "load_courses"
 path = "bin/load_courses.rs"
+
+[[bin]]
+name = "load_assignments"
+path = "bin/load_assignments.rs"

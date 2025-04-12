@@ -16,6 +16,15 @@ pub struct Course {
     pub enrollment_status: EnrollmentStatus,
 }
 
+#[derive(Debug, FromRow)]
+pub struct Assignment {
+    pub id: i64,
+    pub student_id: i64,
+    pub course_id: i64,
+    pub name: String,
+    pub due_at: Option<String>,
+}
+
 #[derive(Debug)]
 pub enum EnrollmentStatus {
     Active,

@@ -56,4 +56,25 @@ impl Lms for Client {
 
         Ok(resp)
     }
+
+    async fn get_course_assignments(
+        &self,
+        account_id: i64,
+        course_id: i64,
+    ) -> anyhow::Result<Vec<dto::Assignment>> {
+        let url = format!(
+            "{}/api/v1/users/{account_id}/courses/{course_id}/assignments",
+            self.base_url,
+        );
+
+        let resp = self
+            .client
+            .get(url)
+            .send()
+            .await?
+            .json::<Vec<dto::Assignment>>()
+            .await?;
+
+        Ok(resp)
+    }
 }
