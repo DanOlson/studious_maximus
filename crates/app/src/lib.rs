@@ -1,5 +1,4 @@
 use db::SqlDatabase;
-#[allow(unused)]
 use lms::Lms;
 use lms::canvas;
 use models::{Assignment, Course, EnrollmentStatus, Student};
@@ -81,8 +80,11 @@ where
         Ok(())
     }
 
-    pub async fn get_assignments(&self) -> anyhow::Result<Vec<Assignment>> {
-        let query = query::AssignmentsQuery;
+    pub async fn get_assignments(
+        &self,
+        due_on_or_after: chrono::NaiveDate,
+    ) -> anyhow::Result<Vec<Assignment>> {
+        let query = query::AssignmentsQuery { due_on_or_after };
         let assignments = self.database.query(&query).await?;
 
         Ok(assignments)
