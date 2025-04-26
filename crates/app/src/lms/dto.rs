@@ -17,6 +17,8 @@ pub struct Assignment {
     pub id: i32,
     pub due_at: Option<String>,
     pub name: String,
+    pub points_possible: Option<f64>,
+    pub grading_type: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

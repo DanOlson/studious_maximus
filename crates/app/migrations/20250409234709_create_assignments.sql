@@ -3,5 +3,7 @@ create table if not exists assignments (
   student_id INTEGER NOT NULL,
   course_id INTEGER NOT NULL,
   name TEXT NOT NULL,
-  due_at TEXT
+  due_at TEXT,
+  points_possible REAL,
+  grading_type TEXT
 );

@@ -15,7 +15,7 @@ impl Query for AssignmentsQuery {
         let assignments = sqlx::query_as!(
             Assignment,
             r#"
-            select id, student_id, course_id, name, due_at
+            select id, student_id, course_id, name, due_at, points_possible, grading_type
             from assignments
             where due_at >= ?
             order by due_at desc nulls last"#,

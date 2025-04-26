@@ -23,6 +23,8 @@ pub struct Assignment {
     pub course_id: i64,
     pub name: String,
     pub due_at: Option<String>,
+    pub points_possible: Option<f64>,
+    pub grading_type: Option<String>,
 }
 
 #[derive(Debug, FromRow)]

@@ -109,13 +109,15 @@ where
             .await?;
         let update = query::UpdateAssignments {
             assignments: assignments
-                .iter()
+                .into_iter()
                 .map(|a| models::Assignment {
                     id: a.id as i64,
                     student_id: course.student_id,
                     course_id: course.id,
-                    name: a.name.clone(),
-                    due_at: a.due_at.clone(),
+                    name: a.name,
+                    due_at: a.due_at,
+                    points_possible: a.points_possible,
+                    grading_type: a.grading_type,
                 })
                 .collect(),
         };

@@ -18,7 +18,7 @@ impl Query for UpdateAssignments {
         }
 
         let mut builder: QueryBuilder<Sqlite> = QueryBuilder::new(
-            "insert into assignments (id, student_id, course_id, name, due_at) values",
+            "insert into assignments (id, student_id, course_id, name, due_at, points_possible, grading_type) values",
         );
         for (i, assignment) in self.assignments.iter().enumerate() {
             builder.push(" (");
@@ -31,6 +31,10 @@ impl Query for UpdateAssignments {
             builder.push_bind(&assignment.name);
             builder.push(", ");
             builder.push_bind(&assignment.due_at);
+            builder.push(", ");
+            builder.push_bind(assignment.points_possible);
+            builder.push(", ");
+            builder.push_bind(&assignment.grading_type);
             builder.push(")");
 
             if i < self.assignments.len() - 1 {
