@@ -25,6 +25,20 @@ pub struct Assignment {
     pub due_at: Option<String>,
 }
 
+#[derive(Debug, FromRow)]
+pub struct Submission {
+    pub id: i64,
+    pub student_id: i64,
+    pub assignment_id: i64,
+    pub grade: Option<String>,
+    pub score: Option<f32>,
+    pub submitted_at: Option<String>,
+    pub graded_at: Option<String>,
+    pub posted_at: Option<String>,
+    pub late: bool,
+    pub missing: bool,
+}
+
 #[derive(Debug)]
 pub enum EnrollmentStatus {
     Active,

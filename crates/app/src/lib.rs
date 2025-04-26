@@ -1,6 +1,7 @@
 use db::SqlDatabase;
 use lms::Lms;
 use lms::canvas;
+use lms::dto;
 use models::{Assignment, Course, EnrollmentStatus, Student};
 use sqlx::SqlitePool;
 
@@ -93,25 +94,59 @@ where
     pub async fn update_assignments(&self) -> anyhow::Result<()> {
         let courses = self.get_courses().await?;
         for course in courses {
-            println!("getting assignments for course {course:?}");
-            let assignments = self
-                .lms
-                .get_course_assignments(course.student_id, course.id)
-                .await?;
-            let update = query::UpdateAssignments {
-                assignments: assignments
-                    .into_iter()
-                    .map(|a| models::Assignment {
-                        id: a.id as i64,
-                        student_id: course.student_id,
-                        course_id: course.id,
-                        name: a.name.clone(),
-                        due_at: a.due_at.clone(),
-                    })
-                    .collect(),
-            };
-            self.database.query(&update).await?;
+            self.upsert_assignments(&course).await?;
+            self.upsert_submissions(&course).await?;
         }
+
+        Ok(())
+    }
+
+    async fn upsert_assignments(&self, course: &Course) -> anyhow::Result<()> {
+        println!("getting assignments for course {course:?}");
+        let assignments = self
+            .lms
+            .get_course_assignments(course.student_id, course.id)
+            .await?;
+        let update = query::UpdateAssignments {
+            assignments: assignments
+                .iter()
+                .map(|a| models::Assignment {
+                    id: a.id as i64,
+                    student_id: course.student_id,
+                    course_id: course.id,
+                    name: a.name.clone(),
+                    due_at: a.due_at.clone(),
+                })
+                .collect(),
+        };
+        self.database.query(&update).await?;
+
+        Ok(())
+    }
+
+    async fn upsert_submissions(&self, course: &Course) -> anyhow::Result<()> {
+        let submissions = self
+            .lms
+            .get_course_submissions(course.id, course.student_id)
+            .await?;
+        let update = query::UpdateSubmissions {
+            submissions: submissions
+                .into_iter()
+                .map(|s| models::Submission {
+                    id: s.id as i64,
+                    student_id: s.student_id as i64,
+                    assignment_id: s.assignment_id as i64,
+                    grade: s.grade,
+                    score: s.score,
+                    submitted_at: s.submitted_at,
+                    graded_at: s.graded_at,
+                    posted_at: s.posted_at,
+                    late: s.late,
+                    missing: s.missing,
+                })
+                .collect(),
+        };
+        self.database.query(&update).await?;
 
         Ok(())
     }

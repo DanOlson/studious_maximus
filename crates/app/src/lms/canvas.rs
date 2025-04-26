@@ -77,4 +77,25 @@ impl Lms for Client {
 
         Ok(resp)
     }
+
+    async fn get_course_submissions(
+        &self,
+        course_id: i64,
+        student_id: i64,
+    ) -> anyhow::Result<Vec<dto::Submission>> {
+        let url = format!(
+            "{}/api/v1/courses/{course_id}/students/submissions?student_ids[]={student_id}",
+            self.base_url,
+        );
+
+        let resp = self
+            .client
+            .get(url)
+            .send()
+            .await?
+            .json::<Vec<dto::Submission>>()
+            .await?;
+
+        Ok(resp)
+    }
 }

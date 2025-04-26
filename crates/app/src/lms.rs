@@ -17,4 +17,10 @@ pub trait Lms {
         account_id: i64,
         course_id: i64,
     ) -> impl std::future::Future<Output = anyhow::Result<Vec<dto::Assignment>>> + Send;
+
+    fn get_course_submissions(
+        &self,
+        course_id: i64,
+        student_id: i64,
+    ) -> impl std::future::Future<Output = anyhow::Result<Vec<dto::Submission>>> + Send;
 }
