@@ -27,13 +27,19 @@ pub struct Assignment {
     pub grading_type: Option<String>,
 }
 
+#[derive(Debug)]
+pub struct AssignmentWithSubmissions {
+    pub assignment: Assignment,
+    pub submissions: Vec<Submission>,
+}
+
 #[derive(Debug, FromRow)]
 pub struct Submission {
     pub id: i64,
     pub student_id: i64,
     pub assignment_id: i64,
     pub grade: Option<String>,
-    pub score: Option<f32>,
+    pub score: Option<f64>,
     pub submitted_at: Option<String>,
     pub graded_at: Option<String>,
     pub posted_at: Option<String>,

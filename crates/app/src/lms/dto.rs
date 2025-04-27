@@ -28,7 +28,7 @@ pub struct Submission {
     pub student_id: i32,
     pub assignment_id: i32,
     pub grade: Option<String>,
-    pub score: Option<f32>,
+    pub score: Option<f64>,
     pub submitted_at: Option<String>,
     pub graded_at: Option<String>,
     pub posted_at: Option<String>,

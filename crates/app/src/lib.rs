@@ -1,13 +1,14 @@
+use std::collections::HashMap;
+
 use db::SqlDatabase;
 use lms::Lms;
 use lms::canvas;
-use lms::dto;
-use models::{Assignment, Course, EnrollmentStatus, Student};
+use models::EnrollmentStatus;
 use sqlx::SqlitePool;
 
 mod db;
 mod lms;
-mod models;
+pub mod models;
 mod prelude;
 mod query;
 
@@ -29,7 +30,7 @@ where
         Self { lms, database }
     }
 
-    pub async fn get_students(&self) -> anyhow::Result<Vec<Student>> {
+    pub async fn get_students(&self) -> anyhow::Result<Vec<models::Student>> {
         let query = query::StudentsQuery;
 
         let students = self.database.query(&query).await?;
@@ -53,7 +54,7 @@ where
         Ok(())
     }
 
-    pub async fn get_courses(&self) -> anyhow::Result<Vec<Course>> {
+    pub async fn get_courses(&self) -> anyhow::Result<Vec<models::Course>> {
         let query = query::CoursesQuery;
         let courses = self.database.query(&query).await?;
 
@@ -84,7 +85,7 @@ where
     pub async fn get_assignments(
         &self,
         due_on_or_after: chrono::NaiveDate,
-    ) -> anyhow::Result<Vec<Assignment>> {
+    ) -> anyhow::Result<Vec<models::Assignment>> {
         let query = query::AssignmentsQuery { due_on_or_after };
         let assignments = self.database.query(&query).await?;
 
@@ -101,7 +102,7 @@ where
         Ok(())
     }
 
-    async fn upsert_assignments(&self, course: &Course) -> anyhow::Result<()> {
+    async fn upsert_assignments(&self, course: &models::Course) -> anyhow::Result<()> {
         println!("getting assignments for course {course:?}");
         let assignments = self
             .lms
@@ -126,7 +127,7 @@ where
         Ok(())
     }
 
-    async fn upsert_submissions(&self, course: &Course) -> anyhow::Result<()> {
+    async fn upsert_submissions(&self, course: &models::Course) -> anyhow::Result<()> {
         let submissions = self
             .lms
             .get_course_submissions(course.id, course.student_id)
@@ -151,6 +152,45 @@ where
         self.database.query(&update).await?;
 
         Ok(())
+    }
+
+    pub async fn get_submissions(&self) -> anyhow::Result<Vec<models::Submission>> {
+        let query = query::SubmissionsQuery;
+        let res = self.database.query(&query).await?;
+
+        Ok(res)
+    }
+
+    pub async fn get_assignments_with_submissions(
+        &self,
+    ) -> anyhow::Result<Vec<models::AssignmentWithSubmissions>> {
+        let on_or_after = chrono::NaiveDate::parse_from_str("2024-08-01", "%Y-%m-%d").unwrap();
+        let assignments = self.get_assignments(on_or_after).await?;
+        let submissions = self.get_submissions().await?;
+        let mut submissions_by_assignment_id: HashMap<i64, Vec<models::Submission>> =
+            HashMap::new();
+
+        for s in submissions {
+            submissions_by_assignment_id
+                .entry(s.assignment_id)
+                .or_default()
+                .push(s);
+        }
+
+        let x = assignments
+            .into_iter()
+            .map(|assignment| {
+                let submissions = submissions_by_assignment_id
+                    .remove(&assignment.id)
+                    .map_or_else(Vec::new, |subs| subs);
+                models::AssignmentWithSubmissions {
+                    assignment,
+                    submissions,
+                }
+            })
+            .collect();
+
+        Ok(x)
     }
 }
 
