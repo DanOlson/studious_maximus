@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use db::SqlDatabase;
+pub use canvas::Client;
+pub use db::SqlDatabase;
 use lms::Lms;
 use lms::canvas;
 use models::EnrollmentStatus;
@@ -12,6 +13,7 @@ pub mod models;
 mod prelude;
 mod query;
 
+#[derive(Clone)]
 pub struct App<L, D>
 where
     L: Lms,
@@ -192,6 +194,20 @@ where
 
         Ok(x)
     }
+
+    pub async fn get_all_data(&self) -> anyhow::Result<models::AllData> {
+        let (students, courses, assignments) = tokio::try_join!(
+            self.get_students(),
+            self.get_courses(),
+            self.get_assignments_with_submissions()
+        )?;
+
+        Ok(models::AllData {
+            students,
+            courses,
+            assignments,
+        })
+    }
 }
 
 impl App<canvas::Client, SqlDatabase> {
@@ -208,6 +224,8 @@ impl App<canvas::Client, SqlDatabase> {
         Ok(Self::new(lms, database))
     }
 }
+
+pub type XApp = App<canvas::Client, SqlDatabase>;
 
 #[cfg(test)]
 mod tests;
