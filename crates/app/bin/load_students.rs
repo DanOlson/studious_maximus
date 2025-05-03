@@ -1,6 +1,6 @@
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let app = app::App::from_env().await?;
+    let app = app::AppReadWrite::from_env().await?;
     app.update_students().await?;
 
     Ok(())

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use app::XApp;
+use app::AppReadonly;
 use rmcp::{
     Error as McpError, ServerHandler,
     model::{CallToolResult, Content, ServerCapabilities, ServerInfo},
@@ -8,11 +8,11 @@ use rmcp::{
 };
 
 #[derive(Clone)]
-pub struct School(Arc<XApp>);
+pub struct School(Arc<AppReadonly>);
 
 #[tool(tool_box)]
 impl School {
-    pub fn new(app: Arc<XApp>) -> Self {
+    pub fn new(app: Arc<AppReadonly>) -> Self {
         Self(app)
     }
 

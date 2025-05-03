@@ -27,3 +27,9 @@ path = "bin/load_courses.rs"
 [[bin]]
 name = "load_assignments"
 path = "bin/load_assignments.rs"
+
+[features]
+default = ["all"]
+read = []
+write = []
+all = ["read", "write"]

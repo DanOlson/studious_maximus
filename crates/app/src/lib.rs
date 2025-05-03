@@ -1,9 +1,12 @@
 use std::collections::HashMap;
 
+#[cfg(feature = "write")]
 pub use canvas::Client;
 pub use db::SqlDatabase;
 use lms::Lms;
+#[cfg(feature = "write")]
 use lms::canvas;
+use lms::noop;
 use models::EnrollmentStatus;
 use sqlx::SqlitePool;
 
@@ -210,7 +213,8 @@ where
     }
 }
 
-impl App<canvas::Client, SqlDatabase> {
+#[cfg(feature = "write")]
+impl AppReadWrite {
     pub async fn from_env() -> anyhow::Result<Self> {
         dotenvy::dotenv().ok();
 
@@ -225,7 +229,23 @@ impl App<canvas::Client, SqlDatabase> {
     }
 }
 
-pub type XApp = App<canvas::Client, SqlDatabase>;
+impl AppReadonly {
+    pub async fn from_env() -> anyhow::Result<Self> {
+        dotenvy::dotenv().ok();
+
+        let db_url = std::env::var("DATABASE_URL")?;
+        let pool = SqlitePool::connect(&db_url).await?;
+        let database = SqlDatabase::new(pool);
+        let lms = crate::lms::noop::Noop;
+
+        Ok(Self::new(lms, database))
+    }
+}
+
+#[cfg(feature = "write")]
+pub type AppReadWrite = App<canvas::Client, SqlDatabase>;
+
+pub type AppReadonly = App<noop::Noop, SqlDatabase>;
 
 #[cfg(test)]
 mod tests;

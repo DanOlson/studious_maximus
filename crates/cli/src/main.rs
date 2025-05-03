@@ -1,6 +1,3 @@
-use std::fmt::Display;
-
-use app::models;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
@@ -20,7 +17,9 @@ enum Commands {
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
-    let app = app::App::from_env().await.expect("Failed to init app");
+    let app = app::AppReadWrite::from_env()
+        .await
+        .expect("Failed to init app");
 
     match &cli.command {
         Some(Commands::Assignments { due_after: _ }) => {

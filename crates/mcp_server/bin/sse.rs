@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
-use app::App;
+use app::AppReadonly;
 use mcp_server::{Result, School};
 use rmcp::transport::sse_server::SseServer;
 use tracing_subscriber::EnvFilter;
@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
 
     tracing::info!("Starting MCP Server");
 
-    let app = Arc::new(App::from_env().await?);
+    let app = Arc::new(AppReadonly::from_env().await?);
 
     let ct = SseServer::serve(BIND_ADDRESS.parse()?)
         .await?

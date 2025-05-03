@@ -1,6 +1,8 @@
 pub mod canvas;
 pub mod dto;
 
+pub mod noop;
+
 #[cfg_attr(test, mockall::automock)]
 pub trait Lms {
     fn get_students(

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use app::App;
+use app::AppReadonly;
 use mcp_server::Result;
 use mcp_server::School;
 use rmcp::{ServiceExt, transport::stdio};
@@ -16,7 +16,7 @@ async fn main() -> Result<()> {
 
     tracing::info!("Starting MCP Server");
 
-    let app = Arc::new(App::from_env().await?);
+    let app = Arc::new(AppReadonly::from_env().await?);
 
     let service = School::new(app).serve(stdio()).await.inspect_err(|e| {
         tracing::error!("serving error: {}", e);
