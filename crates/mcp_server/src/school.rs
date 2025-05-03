@@ -12,8 +12,8 @@ pub struct School(Arc<XApp>);
 
 #[tool(tool_box)]
 impl School {
-    pub fn new(app: XApp) -> Self {
-        Self(Arc::new(app))
+    pub fn new(app: Arc<XApp>) -> Self {
+        Self(app)
     }
 
     #[tool(description = "get school information about students, courses, and assignments")]

@@ -1,2 +1,2 @@
-This server provides information about how the kids are doing in school. It
-includes lists of students, courses, and assignments.
+This server provides information about how the kids are doing in school.
+Specifically, it includes lists of students, courses, and assignments.

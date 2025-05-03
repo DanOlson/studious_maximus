@@ -1,10 +1,9 @@
-mod result;
-mod school;
+use std::sync::Arc;
 
 use app::App;
-pub use result::Result;
+use mcp_server::Result;
+use mcp_server::School;
 use rmcp::{ServiceExt, transport::stdio};
-use school::School;
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
@@ -17,7 +16,7 @@ async fn main() -> Result<()> {
 
     tracing::info!("Starting MCP Server");
 
-    let app = App::from_env().await?;
+    let app = Arc::new(App::from_env().await?);
 
     let service = School::new(app).serve(stdio()).await.inspect_err(|e| {
         tracing::error!("serving error: {}", e);
