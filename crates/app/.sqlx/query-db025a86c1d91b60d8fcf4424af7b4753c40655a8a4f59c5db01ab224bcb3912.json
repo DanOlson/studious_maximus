@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                select id\n                      ,student_id\n                      ,assignment_id\n                      ,grade\n                      ,score\n                      ,submitted_at\n                      ,graded_at\n                      ,posted_at\n                      ,late\n                      ,missing\n                from submissions\n                order by student_id, assignment_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "student_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "assignment_id",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "grade",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "score",
+        "ordinal": 4,
+        "type_info": "Float"
+      },
+      {
+        "name": "submitted_at",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "graded_at",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "posted_at",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "late",
+        "ordinal": 8,
+        "type_info": "Integer"
+      },
+      {
+        "name": "missing",
+        "ordinal": 9,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "db025a86c1d91b60d8fcf4424af7b4753c40655a8a4f59c5db01ab224bcb3912"
+}

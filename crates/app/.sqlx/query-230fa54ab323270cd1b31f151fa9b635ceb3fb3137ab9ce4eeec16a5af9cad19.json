@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            select id, student_id, course_id, name, due_at, points_possible, grading_type\n            from assignments\n            where due_at >= ?\n            order by due_at desc nulls last",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "student_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "course_id",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "name",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "due_at",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "points_possible",
+        "ordinal": 5,
+        "type_info": "Float"
+      },
+      {
+        "name": "grading_type",
+        "ordinal": 6,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "230fa54ab323270cd1b31f151fa9b635ceb3fb3137ab9ce4eeec16a5af9cad19"
+}

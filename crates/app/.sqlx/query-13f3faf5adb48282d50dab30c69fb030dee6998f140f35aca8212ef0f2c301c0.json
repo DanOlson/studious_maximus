@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "select id, name from students",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "13f3faf5adb48282d50dab30c69fb030dee6998f140f35aca8212ef0f2c301c0"
+}

@@ -5,7 +5,7 @@ use mcp_server::{Result, School};
 use rmcp::transport::sse_server::SseServer;
 use tracing_subscriber::EnvFilter;
 
-const BIND_ADDRESS: &str = "127.0.0.1:3030";
+const BIND_ADDRESS: &str = "0.0.0.0:3030";
 
 #[tokio::main]
 async fn main() -> Result<()> {

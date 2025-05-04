@@ -1,0 +1,57 @@
+# ---- Build Stage ----
+FROM rust:1.86-slim AS builder
+
+# Install system dependencies for OpenSSL and build
+RUN apt-get update && \
+  apt-get install -y pkg-config libssl-dev build-essential && \
+  rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Create minimal workspace layout for dependency caching
+RUN mkdir -p crates/app crates/mcp_server crates/cli crates/server
+
+COPY Cargo.toml Cargo.lock ./
+COPY crates/app/Cargo.toml crates/app/
+COPY crates/mcp_server/Cargo.toml crates/mcp_server/
+COPY crates/cli/Cargo.toml crates/cli/
+COPY crates/server/Cargo.toml crates/server/
+
+# Create dummy main files so Cargo accepts all workspace members
+RUN mkdir -p crates/app/src && echo "fn main() {}" > crates/app/src/main.rs && \
+  mkdir -p crates/mcp_server/src && echo "fn main() {}" > crates/mcp_server/src/main.rs && \
+  mkdir -p crates/mcp_server/bin && echo "fn main() {}" > crates/mcp_server/bin/stdio.rs && \
+  echo "fn main() {}" > crates/mcp_server/bin/sse.rs && \
+  mkdir -p crates/cli/src && echo "fn main() {}" > crates/cli/src/main.rs && \
+  mkdir -p crates/server/src && echo "fn main() {}" > crates/server/src/main.rs
+
+# Build dependencies only
+RUN cargo build --release --package mcp_server
+
+# Clean up dummy files
+RUN rm -rf crates
+
+# Copy full source code
+COPY . .
+
+# Final build
+ENV SQLX_OFFLINE=true
+RUN cargo build --offline --release --package mcp_server --bin sse
+
+# ---- Runtime Stage ----
+FROM debian:bookworm-slim
+
+# Install runtime OpenSSL if your binary is dynamically linked
+RUN apt-get update && \
+  apt-get install -y libssl3 ca-certificates && \
+  rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -m mcp
+
+WORKDIR /app
+COPY --from=builder /app/target/release/sse .
+
+USER mcp
+
+ENTRYPOINT ["./sse"]

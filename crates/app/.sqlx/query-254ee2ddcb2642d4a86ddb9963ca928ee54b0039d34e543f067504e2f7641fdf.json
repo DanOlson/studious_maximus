@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            select id, student_id, name, enrollment_status\n            from courses\n            where enrollment_status = 'active'\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "student_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "enrollment_status",
+        "ordinal": 3,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "254ee2ddcb2642d4a86ddb9963ca928ee54b0039d34e543f067504e2f7641fdf"
+}
