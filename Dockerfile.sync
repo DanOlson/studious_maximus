@@ -1,0 +1,54 @@
+FROM rust:1.86-slim AS builder
+
+# Install build dependencies
+RUN apt-get update && \
+  apt-get install -y pkg-config libssl-dev && \
+  rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Create minimal workspace layout for dependency caching
+RUN mkdir -p crates/app crates/mcp_server crates/cli crates/server
+
+COPY Cargo.toml Cargo.lock ./
+COPY crates/app/Cargo.toml crates/app/
+COPY crates/mcp_server/Cargo.toml crates/mcp_server/
+COPY crates/cli/Cargo.toml crates/cli/
+COPY crates/server/Cargo.toml crates/server/
+
+# Create dummy main files so Cargo accepts all workspace members
+RUN mkdir -p crates/app/src && echo "fn main() {}" > crates/app/src/main.rs && \
+  mkdir -p crates/app/bin && echo "fn main() {}" > crates/app/bin/load_all.rs && \
+  mkdir -p crates/cli/src && echo "fn main() {}" > crates/cli/src/main.rs && \
+  mkdir -p crates/server/src && echo "fn main() {}" > crates/server/src/main.rs
+
+# Copy full source and rebuild
+COPY . .
+ENV SQLX_OFFLINE=true
+RUN cargo build --release --package app --bin load_all
+
+# ---- Runtime Stage ----
+FROM debian:bookworm-slim
+
+# Install cron and runtime deps
+RUN apt-get update && \
+  apt-get install -y cron libssl3 ca-certificates && \
+  rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy the built binary
+COPY --from=builder /app/target/release/load_all /usr/local/bin/load_all
+
+COPY ./script/run_sync.sh /usr/local/bin/run_sync.sh
+COPY ./script/sync_entrypoint.sh /sync_entrypoint.sh
+RUN chmod +x /usr/local/bin/run_sync.sh /sync_entrypoint.sh
+
+# Add crontab entry
+RUN echo "0 */2 * * * root . /env.sh; /usr/local/bin/run_sync.sh" > /etc/cron.d/sync-job && \
+  chmod 0644 /etc/cron.d/sync-job
+
+# Create log file
+RUN touch /var/log/cron.log
+
+CMD ["/sync_entrypoint.sh"]

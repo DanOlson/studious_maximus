@@ -100,15 +100,16 @@ where
     pub async fn update_assignments(&self) -> anyhow::Result<()> {
         let courses = self.get_courses().await?;
         for course in courses {
-            self.upsert_assignments(&course).await?;
-            self.upsert_submissions(&course).await?;
+            tokio::try_join!(
+                self.upsert_assignments(&course),
+                self.upsert_submissions(&course),
+            )?;
         }
 
         Ok(())
     }
 
     async fn upsert_assignments(&self, course: &models::Course) -> anyhow::Result<()> {
-        println!("getting assignments for course {course:?}");
         let assignments = self
             .lms
             .get_course_assignments(course.student_id, course.id)
@@ -170,8 +171,8 @@ where
         &self,
     ) -> anyhow::Result<Vec<models::AssignmentWithSubmissions>> {
         let on_or_after = chrono::NaiveDate::parse_from_str("2024-08-01", "%Y-%m-%d").unwrap();
-        let assignments = self.get_assignments(on_or_after).await?;
-        let submissions = self.get_submissions().await?;
+        let (assignments, submissions) =
+            tokio::try_join!(self.get_assignments(on_or_after), self.get_submissions())?;
         let mut submissions_by_assignment_id: HashMap<i64, Vec<models::Submission>> =
             HashMap::new();
 

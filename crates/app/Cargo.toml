@@ -28,6 +28,10 @@ path = "bin/load_courses.rs"
 name = "load_assignments"
 path = "bin/load_assignments.rs"
 
+[[bin]]
+name = "load_all"
+path = "bin/load_all.rs"
+
 [features]
 default = ["all"]
 read = []

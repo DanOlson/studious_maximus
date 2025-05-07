@@ -11,3 +11,13 @@ services:
     volumes:
       - ./crates/app/db:/app/db
     restart: unless-stopped
+  sync:
+    image: studious_sync
+    environment:
+      RUST_LOG: debug
+      DATABASE_URL: sqlite:///app/db/db.sqlite
+      CANVAS_BASE_URL: ${CANVAS_BASE_URL}
+      CANVAS_TOKEN: ${CANVAS_TOKEN}
+    volumes:
+      - ./crates/app/db:/app/db
+    restart: unless-stopped
