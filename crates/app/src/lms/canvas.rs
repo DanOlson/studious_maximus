@@ -1,6 +1,6 @@
 use super::{Lms, dto};
 use reqwest::{
-    Client as ReqClient,
+    Client as ReqClient, Url,
     header::{HeaderMap, HeaderValue},
 };
 
@@ -62,20 +62,25 @@ impl Lms for Client {
         account_id: i64,
         course_id: i64,
     ) -> anyhow::Result<Vec<dto::Assignment>> {
+        let mut assignments = Vec::new();
         let url = format!(
             "{}/api/v1/users/{account_id}/courses/{course_id}/assignments",
             self.base_url,
         );
 
-        let resp = self
-            .client
-            .get(url)
-            .send()
-            .await?
-            .json::<Vec<dto::Assignment>>()
-            .await?;
+        let mut next_url = Some(Url::parse(&url)?);
 
-        Ok(resp)
+        while let Some(url) = next_url {
+            let resp = self.client.get(url.clone()).send().await?;
+            let headers = resp.headers().clone();
+
+            let mut page: Vec<dto::Assignment> = resp.json().await?;
+            assignments.append(&mut page);
+
+            next_url = parse_next_link(headers.get("link"));
+        }
+
+        Ok(assignments)
     }
 
     async fn get_course_submissions(
@@ -83,19 +88,47 @@ impl Lms for Client {
         course_id: i64,
         student_id: i64,
     ) -> anyhow::Result<Vec<dto::Submission>> {
+        let mut submissions = Vec::new();
+
         let url = format!(
             "{}/api/v1/courses/{course_id}/students/submissions?student_ids[]={student_id}",
             self.base_url,
         );
 
-        let resp = self
-            .client
-            .get(url)
-            .send()
-            .await?
-            .json::<Vec<dto::Submission>>()
-            .await?;
+        let mut next_url = Some(Url::parse(&url)?);
 
-        Ok(resp)
+        while let Some(url) = next_url {
+            let resp = self.client.get(url.clone()).send().await?;
+            let headers = resp.headers().clone();
+
+            let mut page: Vec<dto::Submission> = resp.json().await?;
+            submissions.append(&mut page);
+
+            next_url = parse_next_link(headers.get("link"));
+        }
+
+        Ok(submissions)
     }
+}
+
+fn parse_next_link(link_header: Option<&reqwest::header::HeaderValue>) -> Option<Url> {
+    let header_value = link_header?.to_str().ok()?;
+
+    for part in header_value.split(',') {
+        let sections: Vec<&str> = part.trim().split(';').collect();
+        if sections.len() < 2 {
+            continue;
+        }
+
+        let url_part = sections[0].trim();
+        let rel_part = sections[1].trim();
+
+        if rel_part == r#"rel="next""# {
+            let url_str = url_part.trim_start_matches('<').trim_end_matches('>');
+
+            return Url::parse(url_str).ok();
+        }
+    }
+
+    None
 }
