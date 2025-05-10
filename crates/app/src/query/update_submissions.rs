@@ -1,4 +1,4 @@
-use sqlx::{QueryBuilder, Sqlite, SqlitePool};
+use sqlx::{QueryBuilder, SqlitePool};
 
 use crate::models::Submission;
 
@@ -17,7 +17,7 @@ impl Query for UpdateSubmissions {
             return Ok(());
         }
 
-        let mut builder: QueryBuilder<Sqlite> = QueryBuilder::new(
+        QueryBuilder::new(
             r#"
             insert into submissions (
                 id,
@@ -30,39 +30,22 @@ impl Query for UpdateSubmissions {
                 posted_at,
                 late,
                 missing
-            ) values
-        "#,
-        );
-        for (i, submission) in self.submissions.iter().enumerate() {
-            builder.push(" (");
-            builder.push_bind(submission.id);
-            builder.push(", ");
-            builder.push_bind(submission.student_id);
-            builder.push(", ");
-            builder.push_bind(submission.assignment_id);
-            builder.push(", ");
-            builder.push_bind(&submission.grade);
-            builder.push(", ");
-            builder.push_bind(submission.score);
-            builder.push(", ");
-            builder.push_bind(&submission.submitted_at);
-            builder.push(", ");
-            builder.push_bind(&submission.graded_at);
-            builder.push(", ");
-            builder.push_bind(&submission.posted_at);
-            builder.push(", ");
-            builder.push_bind(submission.late);
-            builder.push(", ");
-            builder.push_bind(submission.missing);
-            builder.push(")");
-
-            // push a comma unless we're on the last iteration
-            if i < self.submissions.len() - 1 {
-                builder.push(", ");
-            }
-        }
-
-        builder.push(
+            )
+            "#,
+        )
+        .push_values(self.submissions.iter(), |mut bld, sub| {
+            bld.push_bind(sub.id);
+            bld.push_bind(sub.student_id);
+            bld.push_bind(sub.assignment_id);
+            bld.push_bind(&sub.grade);
+            bld.push_bind(sub.score);
+            bld.push_bind(&sub.submitted_at);
+            bld.push_bind(&sub.graded_at);
+            bld.push_bind(&sub.posted_at);
+            bld.push_bind(sub.late);
+            bld.push_bind(sub.missing);
+        })
+        .push(
             r#"
             on conflict(id) do update
             set grade=excluded.grade,
@@ -71,10 +54,110 @@ impl Query for UpdateSubmissions {
                 graded_at=excluded.graded_at,
                 posted_at=excluded.posted_at,
                 late=excluded.late,
-                missing=excluded.missing"#,
-        );
-        builder.build().execute(pool).await?;
+                missing=excluded.missing
+            "#,
+        )
+        .build()
+        .execute(pool)
+        .await?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::support::all_submissions;
+
+    use super::*;
+
+    use sqlx::SqlitePool;
+
+    #[sqlx::test]
+    async fn insert_new_submissions(pool: SqlitePool) {
+        let submissions = vec![
+            Submission {
+                id: 1,
+                student_id: 11,
+                assignment_id: 111,
+                grade: None,
+                score: None,
+                submitted_at: None,
+                graded_at: None,
+                posted_at: None,
+                late: false,
+                missing: false,
+            },
+            Submission {
+                id: 2,
+                student_id: 11,
+                assignment_id: 123,
+                grade: Some("A+".to_string()),
+                score: Some(100.0),
+                submitted_at: Some("2025-05-01".to_string()),
+                graded_at: Some("2025-05-03".to_string()),
+                posted_at: Some("2025-05-03".to_string()),
+                late: false,
+                missing: false,
+            },
+        ];
+        let upsert = UpdateSubmissions { submissions };
+        upsert.exec(&pool).await.unwrap();
+
+        let submissions = all_submissions(&pool).await;
+
+        assert_eq!(submissions.len(), 2);
+    }
+
+    #[sqlx::test(fixtures("../../fixtures/submissions.sql"))]
+    async fn update_existing_submissions(pool: SqlitePool) {
+        let submissions = vec![
+            Submission {
+                id: 1,
+                student_id: 22,
+                assignment_id: 333,
+                grade: Some("A".to_string()),
+                score: Some(94.5),
+                submitted_at: Some("2025-05-05".to_string()),
+                graded_at: Some("2025-05-06".to_string()),
+                posted_at: Some("2025-05-06".to_string()),
+                late: false,
+                missing: false,
+            },
+            Submission {
+                id: 2,
+                student_id: 22,
+                assignment_id: 456,
+                grade: Some("A".to_string()),
+                score: Some(95.5),
+                submitted_at: Some("2025-05-05".to_string()),
+                graded_at: Some("2025-05-06".to_string()),
+                posted_at: Some("2025-05-06".to_string()),
+                late: false,
+                missing: false,
+            },
+        ];
+        let upsert = UpdateSubmissions { submissions };
+        upsert.exec(&pool).await.unwrap();
+
+        let submissions = all_submissions(&pool).await;
+
+        assert_eq!(submissions[0].id, 1);
+        assert_eq!(submissions[0].grade, Some("A".to_string()));
+        assert_eq!(submissions[0].score, Some(94.5));
+        assert_eq!(submissions[0].submitted_at, Some("2025-05-05".to_string()));
+        assert_eq!(submissions[0].graded_at, Some("2025-05-06".to_string()));
+        assert_eq!(submissions[0].posted_at, Some("2025-05-06".to_string()));
+        assert!(!submissions[0].late);
+        assert!(!submissions[0].missing);
+
+        assert_eq!(submissions[1].id, 2);
+        assert_eq!(submissions[1].grade, Some("A".to_string()));
+        assert_eq!(submissions[1].score, Some(95.5));
+        assert_eq!(submissions[1].submitted_at, Some("2025-05-05".to_string()));
+        assert_eq!(submissions[1].graded_at, Some("2025-05-06".to_string()));
+        assert_eq!(submissions[1].posted_at, Some("2025-05-06".to_string()));
+        assert!(!submissions[1].late);
+        assert!(!submissions[1].missing);
     }
 }

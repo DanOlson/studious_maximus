@@ -1,4 +1,4 @@
-use sqlx::{QueryBuilder, Sqlite};
+use sqlx::QueryBuilder;
 
 use crate::models::Course;
 
@@ -17,29 +17,17 @@ impl Query for UpdateCourses {
             return Ok(());
         }
 
-        let mut builder: QueryBuilder<Sqlite> = QueryBuilder::new(
-            "insert into courses (id, student_id, name, enrollment_status) values",
-        );
-        for (i, course) in self.courses.iter().enumerate() {
-            builder
-                .push(" (")
-                .push_bind(course.id)
-                .push(", ")
-                .push_bind(course.student_id)
-                .push(", ")
-                .push_bind(&course.name)
-                .push(", ")
-                .push_bind(course.enrollment_status.to_string().clone())
-                .push(")");
-
-            if i < self.courses.len() - 1 {
-                builder.push(",");
-            }
-        }
-
-        builder.push(" on conflict(id) do nothing");
-
-        builder.build().execute(pool).await?;
+        QueryBuilder::new("insert into courses (id, student_id, name, enrollment_status)")
+            .push_values(self.courses.iter(), |mut bld, course| {
+                bld.push_bind(course.id);
+                bld.push_bind(course.student_id);
+                bld.push_bind(&course.name);
+                bld.push_bind(course.enrollment_status.to_string().clone());
+            })
+            .push(" on conflict(id) do nothing")
+            .build()
+            .execute(pool)
+            .await?;
 
         Ok(())
     }
@@ -47,20 +35,17 @@ impl Query for UpdateCourses {
 
 #[cfg(test)]
 mod tests {
-    use sqlx::{Row, SqlitePool};
+    use sqlx::SqlitePool;
 
     use crate::models::EnrollmentStatus;
 
     use super::*;
 
     async fn get_count(pool: &SqlitePool) -> i64 {
-        let result = sqlx::query("select count(1) as count from courses")
+        sqlx::query_scalar("select count(1) as count from courses")
             .fetch_one(pool)
             .await
-            .unwrap();
-        let count: i64 = result.get("count");
-
-        count
+            .unwrap()
     }
 
     #[sqlx::test]
@@ -83,6 +68,7 @@ mod tests {
         };
         let res = update.exec(&pool).await;
         assert!(res.is_ok());
+
         // verify conflict handling doesn't return Err
         update.exec(&pool).await.unwrap();
 

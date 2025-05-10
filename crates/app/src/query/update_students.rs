@@ -1,4 +1,4 @@
-use sqlx::{QueryBuilder, Sqlite, SqlitePool};
+use sqlx::{QueryBuilder, SqlitePool};
 
 use crate::models::Student;
 
@@ -17,25 +17,14 @@ impl Query for UpdateStudents {
             return Ok(());
         }
 
-        let mut builder: QueryBuilder<Sqlite> =
-            QueryBuilder::new("insert into students (id, name) values");
-        for (i, student) in self.students.iter().enumerate() {
-            builder
-                .push(" (")
-                .push_bind(student.id)
-                .push(", ")
-                .push_bind(&student.name)
-                .push(")");
-
-            // push a comma unless we're on the last iteration
-            if i < self.students.len() - 1 {
-                builder.push(",");
-            }
-        }
-
-        builder.push(" on conflict(id) do nothing");
-
-        builder.build().execute(pool).await?;
+        QueryBuilder::new("insert into students (id, name)")
+            .push_values(self.students.iter(), |mut bld, student| {
+                bld.push_bind(student.id).push_bind(&student.name);
+            })
+            .push(" on conflict(id) do nothing")
+            .build()
+            .execute(pool)
+            .await?;
 
         Ok(())
     }
@@ -44,16 +33,12 @@ impl Query for UpdateStudents {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sqlx::Row;
 
     async fn get_count(pool: &SqlitePool) -> i64 {
-        let result = sqlx::query("select count(1) as count from students")
+        sqlx::query_scalar("select count(1) as count from students")
             .fetch_one(pool)
             .await
-            .unwrap();
-        let count: i64 = result.get("count");
-
-        count
+            .unwrap()
     }
 
     #[sqlx::test]

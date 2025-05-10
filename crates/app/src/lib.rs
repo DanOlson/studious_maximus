@@ -1,3 +1,8 @@
+#[cfg(test)]
+mod support;
+#[cfg(test)]
+mod tests;
+
 use std::collections::HashMap;
 
 #[cfg(feature = "write")]
@@ -247,6 +252,3 @@ impl AppReadonly {
 pub type AppReadWrite = App<canvas::Client, SqlDatabase>;
 
 pub type AppReadonly = App<noop::Noop, SqlDatabase>;
-
-#[cfg(test)]
-mod tests;

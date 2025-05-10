@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use serde::Deserialize;
 use sqlx::FromRow;
 
 #[derive(Debug, FromRow)]
@@ -45,6 +46,37 @@ pub struct Submission {
     pub posted_at: Option<String>,
     pub late: bool,
     pub missing: bool,
+}
+
+#[derive(Deserialize)]
+pub struct RawDbSubmission {
+    pub id: i64,
+    pub student_id: i64,
+    pub assignment_id: i64,
+    pub grade: Option<String>,
+    pub score: Option<f64>,
+    pub submitted_at: Option<String>,
+    pub graded_at: Option<String>,
+    pub posted_at: Option<String>,
+    pub late: i64,
+    pub missing: i64,
+}
+
+impl From<&RawDbSubmission> for Submission {
+    fn from(value: &RawDbSubmission) -> Self {
+        Submission {
+            id: value.id,
+            student_id: value.student_id,
+            assignment_id: value.assignment_id,
+            grade: value.grade.clone(),
+            score: value.score,
+            submitted_at: value.submitted_at.clone(),
+            graded_at: value.graded_at.clone(),
+            posted_at: value.posted_at.clone(),
+            late: value.late == 1,
+            missing: value.missing == 1,
+        }
+    }
 }
 
 #[derive(Debug)]
