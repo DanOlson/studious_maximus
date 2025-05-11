@@ -24,13 +24,13 @@ async fn main() {
     match &cli.command {
         Some(Commands::Assignments { due_after: _ }) => {
             let results = app
-                .get_assignments_with_submissions()
+                .get_assignments_with_submissions(None)
                 .await
                 .expect("to get data");
             println!("{results:?}");
         }
         None => {
-            let data = app.get_all_data().await.expect("to get data");
+            let data = app.get_app_data(None).await.expect("to get data");
 
             println!("{}\n", data);
         }

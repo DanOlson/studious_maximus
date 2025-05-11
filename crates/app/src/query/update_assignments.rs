@@ -113,7 +113,7 @@ mod tests {
         update.exec(&pool).await.unwrap();
 
         let assignments = all_assignments(&pool).await;
-        assert_eq!(assignments.len(), 3);
+        assert_eq!(assignments.len(), 6);
         assert_eq!(assignments[0].id, 1);
         assert_eq!(assignments[0].name, "Fish Communication Exercise");
         assert_eq!(assignments[0].due_at, Some("2025-05-20".to_string()));

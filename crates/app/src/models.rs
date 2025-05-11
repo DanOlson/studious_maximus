@@ -48,7 +48,7 @@ pub struct Submission {
     pub missing: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, FromRow)]
 pub struct RawDbSubmission {
     pub id: i64,
     pub student_id: i64,
@@ -60,6 +60,23 @@ pub struct RawDbSubmission {
     pub posted_at: Option<String>,
     pub late: i64,
     pub missing: i64,
+}
+
+impl From<RawDbSubmission> for Submission {
+    fn from(value: RawDbSubmission) -> Self {
+        Submission {
+            id: value.id,
+            student_id: value.student_id,
+            assignment_id: value.assignment_id,
+            grade: value.grade.clone(),
+            score: value.score,
+            submitted_at: value.submitted_at.clone(),
+            graded_at: value.graded_at.clone(),
+            posted_at: value.posted_at.clone(),
+            late: value.late == 1,
+            missing: value.missing == 1,
+        }
+    }
 }
 
 impl From<&RawDbSubmission> for Submission {
@@ -97,14 +114,22 @@ impl Display for EnrollmentStatus {
     }
 }
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct StudentId(pub i64);
+
+#[derive(Debug, Clone)]
+pub struct AppDataFilters {
+    pub student: StudentId,
+}
+
 #[derive(Debug)]
-pub struct AllData {
+pub struct AppData {
     pub students: Vec<Student>,
     pub courses: Vec<Course>,
     pub assignments: Vec<AssignmentWithSubmissions>,
 }
 
-impl Display for AllData {
+impl Display for AppData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("Students:\n")?;
         for student in &self.students {

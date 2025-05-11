@@ -12,7 +12,7 @@ use lms::Lms;
 #[cfg(feature = "write")]
 use lms::canvas;
 use lms::noop;
-use models::EnrollmentStatus;
+use models::{AppDataFilters, EnrollmentStatus};
 use sqlx::SqlitePool;
 
 mod db;
@@ -40,8 +40,11 @@ where
         Self { lms, database }
     }
 
-    pub async fn get_students(&self) -> anyhow::Result<Vec<models::Student>> {
-        let query = query::StudentsQuery;
+    pub async fn get_students(
+        &self,
+        filters: Option<AppDataFilters>,
+    ) -> anyhow::Result<Vec<models::Student>> {
+        let query = query::StudentsQuery::from(filters);
 
         let students = self.database.query(&query).await?;
 
@@ -64,15 +67,18 @@ where
         Ok(())
     }
 
-    pub async fn get_courses(&self) -> anyhow::Result<Vec<models::Course>> {
-        let query = query::CoursesQuery;
+    pub async fn get_courses(
+        &self,
+        filters: Option<AppDataFilters>,
+    ) -> anyhow::Result<Vec<models::Course>> {
+        let query = query::CoursesQuery::from(filters);
         let courses = self.database.query(&query).await?;
 
         Ok(courses)
     }
 
     pub async fn update_courses(&self) -> anyhow::Result<()> {
-        let students = self.get_students().await?;
+        let students = self.get_students(None).await?;
         for student in students {
             let courses = self.lms.get_active_courses(student.id).await?;
             let update = query::UpdateCourses {
@@ -94,16 +100,16 @@ where
 
     pub async fn get_assignments(
         &self,
-        due_on_or_after: chrono::NaiveDate,
+        filters: Option<AppDataFilters>,
     ) -> anyhow::Result<Vec<models::Assignment>> {
-        let query = query::AssignmentsQuery { due_on_or_after };
+        let query = query::AssignmentsQuery::from(filters);
         let assignments = self.database.query(&query).await?;
 
         Ok(assignments)
     }
 
     pub async fn update_assignments(&self) -> anyhow::Result<()> {
-        let courses = self.get_courses().await?;
+        let courses = self.get_courses(None).await?;
         for course in courses {
             tokio::try_join!(
                 self.upsert_assignments(&course),
@@ -165,8 +171,11 @@ where
         Ok(())
     }
 
-    pub async fn get_submissions(&self) -> anyhow::Result<Vec<models::Submission>> {
-        let query = query::SubmissionsQuery;
+    pub async fn get_submissions(
+        &self,
+        filters: Option<AppDataFilters>,
+    ) -> anyhow::Result<Vec<models::Submission>> {
+        let query = query::SubmissionsQuery::from(filters);
         let res = self.database.query(&query).await?;
 
         Ok(res)
@@ -174,10 +183,12 @@ where
 
     pub async fn get_assignments_with_submissions(
         &self,
+        filters: Option<AppDataFilters>,
     ) -> anyhow::Result<Vec<models::AssignmentWithSubmissions>> {
-        let on_or_after = chrono::NaiveDate::parse_from_str("2024-08-01", "%Y-%m-%d").unwrap();
-        let (assignments, submissions) =
-            tokio::try_join!(self.get_assignments(on_or_after), self.get_submissions())?;
+        let (assignments, submissions) = tokio::try_join!(
+            self.get_assignments(filters.clone()),
+            self.get_submissions(filters)
+        )?;
         let mut submissions_by_assignment_id: HashMap<i64, Vec<models::Submission>> =
             HashMap::new();
 
@@ -204,14 +215,17 @@ where
         Ok(x)
     }
 
-    pub async fn get_all_data(&self) -> anyhow::Result<models::AllData> {
+    pub async fn get_app_data(
+        &self,
+        filters: Option<AppDataFilters>,
+    ) -> anyhow::Result<models::AppData> {
         let (students, courses, assignments) = tokio::try_join!(
-            self.get_students(),
-            self.get_courses(),
-            self.get_assignments_with_submissions()
+            self.get_students(filters.clone()),
+            self.get_courses(filters.clone()),
+            self.get_assignments_with_submissions(filters)
         )?;
 
-        Ok(models::AllData {
+        Ok(models::AppData {
             students,
             courses,
             assignments,

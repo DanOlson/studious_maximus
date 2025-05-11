@@ -1,3 +1,3 @@
 insert into students (id, name) values
-(29796, 'Asher Olson'),
-(29756, 'Noah Olson');
+(29796, 'Alice'),
+(29756, 'Bob');
