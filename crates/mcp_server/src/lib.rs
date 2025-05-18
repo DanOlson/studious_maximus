@@ -1,3 +1,5 @@
+mod models;
+mod render;
 mod result;
 mod school;
 

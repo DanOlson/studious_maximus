@@ -1,16 +1,27 @@
-use std::sync::Arc;
+use std::{fmt::Display, sync::Arc};
 
 use app::{
     AppReadonly,
     models::{self, AppDataFilters},
 };
 use rmcp::{
-    Error as McpError, ServerHandler,
-    model::{CallToolResult, Content, ServerCapabilities, ServerInfo},
+    Error as McpError, RoleServer, ServerHandler,
+    model::{
+        AnnotateAble, CallToolResult, Content, ListResourcesResult, PaginatedRequestParam,
+        RawResource, ReadResourceRequestParam, ReadResourceResult, ResourceContents,
+        ServerCapabilities, ServerInfo,
+    },
+    serde_json::json,
+    service::RequestContext,
     tool,
 };
 use schemars::JsonSchema;
 use serde::Deserialize;
+
+use crate::{
+    models::Output,
+    render::{render_student_data, render_students},
+};
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct StudentId(pub i64);
@@ -42,11 +53,15 @@ impl School {
             .0
             .get_app_data(app_data_filters)
             .await
-            .map_err(|err| McpError::internal_error(err.to_string(), None))?;
+            .map(Output::from)
+            .map_err(mcp_internal_error)?;
+        let mut text = String::new();
+        for student in data.data {
+            let render = render_student_data(&student).map_err(mcp_internal_error)?;
+            text.push_str(&render);
+        }
 
-        Ok(CallToolResult::success(vec![Content::text(
-            data.to_string(),
-        )]))
+        Ok(CallToolResult::success(vec![Content::text(text)]))
     }
 }
 
@@ -55,9 +70,54 @@ impl ServerHandler for School {
     fn get_info(&self) -> ServerInfo {
         let inst = include_str!("../instructions.txt");
         ServerInfo {
-            capabilities: ServerCapabilities::builder().enable_tools().build(),
+            capabilities: ServerCapabilities::builder()
+                .enable_tools()
+                .enable_resources()
+                .build(),
             instructions: Some(inst.into()),
             ..Default::default()
         }
     }
+
+    async fn list_resources(
+        &self,
+        _request: PaginatedRequestParam,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListResourcesResult, McpError> {
+        Ok(ListResourcesResult {
+            resources: vec![
+                RawResource::new("text://list_students", "List Students").no_annotation(),
+            ],
+            next_cursor: None,
+        })
+    }
+
+    async fn read_resource(
+        &self,
+        request: ReadResourceRequestParam,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ReadResourceResult, McpError> {
+        match request.uri.as_str() {
+            "text://list_students" => {
+                let students = self
+                    .0
+                    .get_students(None)
+                    .await
+                    .map_err(mcp_internal_error)?;
+
+                let text = render_students(&students).map_err(mcp_internal_error)?;
+                Ok(ReadResourceResult {
+                    contents: vec![ResourceContents::text(text, "text://list_students")],
+                })
+            }
+            _ => Err(McpError::resource_not_found(
+                "resource not found",
+                Some(json!({"uri": request.uri})),
+            )),
+        }
+    }
+}
+
+fn mcp_internal_error(err: impl Display) -> McpError {
+    McpError::internal_error(err.to_string(), None)
 }

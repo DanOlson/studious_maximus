@@ -32,7 +32,7 @@ async fn main() {
         None => {
             let data = app.get_app_data(None).await.expect("to get data");
 
-            println!("{}\n", data);
+            println!("{:?}\n", data);
         }
     }
 }

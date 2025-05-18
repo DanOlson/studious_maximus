@@ -1,0 +1,18 @@
+Student: {{this.student.name}}
+
+Enrolled Courses:
+{{#each courses}}
+- {{name}}
+{{/each}}
+
+Assignments:
+{{#each assignments}}
+{{inc @index}}. {{name}} ({{course}})
+    - Due: {{due_at}}{{#if submitted_at}}
+    - Submitted: {{submitted_at}}{{/if}}{{#if graded_at}}
+    - Graded: {{graded_at}}{{/if}}{{#if grade}}
+    - Grade: {{grade}}{{/if}}{{#if score}}
+    - Score: {{score}}{{/if}}{{#if late}}
+    - Status: Late!{{/if}}{{#if missing}}
+    - Status: Missing!{{/if}}
+{{/each}}

@@ -12,6 +12,7 @@ name = "sse"
 path = "bin/sse.rs"
 
 [dependencies]
+handlebars.workspace = true
 rmcp.workspace = true
 rmcp-macros.workspace = true
 schemars.workspace = true
