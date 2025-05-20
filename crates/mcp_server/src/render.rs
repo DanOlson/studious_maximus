@@ -94,13 +94,15 @@ Enrolled Courses:
 - Chemistry
 
 Assignments:
-1. Research Paper (Chemistry)
+1. Research Paper
+    - Course: Chemistry
     - Due: 2025-11-25
     - Submitted: 2025-10-13
     - Graded: 2025-10-13
     - Grade: A
     - Score: 96.1
-2. Quiz (Chemistry)
+2. Quiz
+    - Course: Chemistry
     - Due: 2025-11-25
     - Status: Missing!
 "#
