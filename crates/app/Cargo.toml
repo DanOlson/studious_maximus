@@ -7,9 +7,8 @@ edition = "2024"
 anyhow.workspace = true
 chrono.workspace = true
 dotenvy.workspace = true
-reqwest.workspace = true
+reqwest = { workspace = true, optional = true }
 serde.workspace = true
-serde_json.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
 
@@ -19,21 +18,25 @@ mockall = "0.13.1"
 [[bin]]
 name = "load_students"
 path = "bin/load_students.rs"
+required-features = ["write"]
 
 [[bin]]
 name = "load_courses"
 path = "bin/load_courses.rs"
+required-features = ["write"]
 
 [[bin]]
 name = "load_assignments"
 path = "bin/load_assignments.rs"
+required-features = ["write"]
 
 [[bin]]
 name = "load_all"
 path = "bin/load_all.rs"
+required-features = ["write"]
 
 [features]
 default = ["all"]
 read = []
-write = []
+write = ["dep:reqwest"]
 all = ["read", "write"]

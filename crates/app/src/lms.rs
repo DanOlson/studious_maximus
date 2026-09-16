@@ -1,3 +1,4 @@
+#[cfg(feature = "write")]
 pub mod canvas;
 pub mod dto;
 

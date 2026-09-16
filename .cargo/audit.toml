@@ -1,0 +1,12 @@
+[advisories]
+ignore = [
+  # RUSTSEC-2026-0189: rmcp 0.1.x streamable HTTP Host-header advisory.
+  # The current server uses rmcp's older SSE/stdio transports and should be
+  # deployed behind trusted LAN/VPN controls. Upgrading rmcp requires API
+  # migration and is tracked for the MCP hardening phase.
+  "RUSTSEC-2026-0189",
+  # RUSTSEC-2023-0071: pulled into Cargo.lock through sqlx-mysql used by
+  # sqlx's compile-time macro stack, while this application enables only
+  # SQLite at runtime and does not perform RSA operations.
+  "RUSTSEC-2023-0071",
+]

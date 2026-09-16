@@ -3,3 +3,4 @@
 
 db.sqlite
 script/mcp.sh
+.DS_Store
