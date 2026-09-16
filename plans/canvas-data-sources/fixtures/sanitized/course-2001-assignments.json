@@ -1,0 +1,13 @@
+[
+  {
+    "id": 3001,
+    "name": "Linear Equations Practice",
+    "due_at": "2025-02-04T21:59:00Z",
+    "points_possible": 10.0,
+    "grading_type": "points",
+    "html_url": "https://canvas.example.invalid/courses/2001/assignments/3001",
+    "overrides": [
+      { "id": 3101, "student_ids": [1002], "due_at": "2025-02-05T21:59:00Z" }
+    ]
+  }
+]

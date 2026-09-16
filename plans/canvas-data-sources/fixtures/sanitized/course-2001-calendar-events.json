@@ -1,0 +1,11 @@
+[
+  {
+    "id": 4001,
+    "context_code": "course_2001",
+    "title": "Chapter 4 Quiz",
+    "start_at": "2025-02-07T15:00:00Z",
+    "end_at": "2025-02-07T15:45:00Z",
+    "all_day": false,
+    "html_url": "https://canvas.example.invalid/calendar?event_id=4001"
+  }
+]

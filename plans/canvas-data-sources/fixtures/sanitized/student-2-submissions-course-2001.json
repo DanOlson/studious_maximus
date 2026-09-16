@@ -1,0 +1,15 @@
+[
+  {
+    "id": 6002,
+    "user_id": 1002,
+    "assignment_id": 3001,
+    "grade": "10",
+    "score": 10.0,
+    "submitted_at": "2025-02-04T20:30:00Z",
+    "graded_at": "2025-02-04T21:00:00Z",
+    "posted_at": "2025-02-04T21:05:00Z",
+    "workflow_state": "graded",
+    "late": false,
+    "missing": false
+  }
+]

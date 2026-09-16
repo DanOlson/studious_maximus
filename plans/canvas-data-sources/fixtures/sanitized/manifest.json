@@ -1,0 +1,18 @@
+{
+  "school_timezone": "America/Chicago",
+  "school_week": { "starts_on": "Monday", "ends_on": "Sunday" },
+  "date_range": { "start_date": "2025-02-03", "end_date": "2025-02-10" },
+  "files": [
+    "observees.json",
+    "student-1-active-courses.json",
+    "student-2-active-courses.json",
+    "student-1-planner-items.json",
+    "student-2-planner-items.json",
+    "course-2001-calendar-events.json",
+    "course-2001-assignments.json",
+    "student-1-submissions-course-2001.json",
+    "student-2-submissions-course-2001.json",
+    "course-2001-front-page.json"
+  ],
+  "sanitization": "Representative IDs are stable sample IDs; names, URLs, and content are sanitized examples preserving Canvas shape."
+}

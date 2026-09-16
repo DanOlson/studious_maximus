@@ -1,0 +1,92 @@
+{
+  "school_timezone": "America/Chicago",
+  "students": [
+    { "canvas_user_id": 1001, "display_name": "Sample Student A" },
+    { "canvas_user_id": 1002, "display_name": "Sample Student B" }
+  ],
+  "courses": [
+    { "canvas_course_id": 2001, "name": "Sample Algebra" },
+    { "canvas_course_id": 2002, "name": "Sample Language Arts" },
+    { "canvas_course_id": 2003, "name": "Sample Science" }
+  ],
+  "enrollments": [
+    { "canvas_user_id": 1001, "canvas_course_id": 2001, "state": "active" },
+    { "canvas_user_id": 1001, "canvas_course_id": 2002, "state": "active" },
+    { "canvas_user_id": 1002, "canvas_course_id": 2001, "state": "active" },
+    { "canvas_user_id": 1002, "canvas_course_id": 2003, "state": "active" }
+  ],
+  "assignments": [
+    {
+      "canvas_assignment_id": 3001,
+      "canvas_course_id": 2001,
+      "title": "Linear Equations Practice",
+      "points_possible": 10.0,
+      "html_url": "https://canvas.example.invalid/courses/2001/assignments/3001"
+    }
+  ],
+  "student_assignment_dates": [
+    {
+      "canvas_user_id": 1001,
+      "canvas_assignment_id": 3001,
+      "due_at_utc": "2025-02-04T21:59:00Z",
+      "source": "planner"
+    },
+    {
+      "canvas_user_id": 1002,
+      "canvas_assignment_id": 3001,
+      "due_at_utc": "2025-02-05T21:59:00Z",
+      "source": "planner+assignment_override"
+    }
+  ],
+  "schedule_items": [
+    {
+      "student_id": 1001,
+      "course_id": 2001,
+      "kind": "assignment",
+      "title": "Linear Equations Practice",
+      "starts_at_utc": null,
+      "due_at_utc": "2025-02-04T21:59:00Z",
+      "all_day_date": null,
+      "status": "missing",
+      "source": "canvas_planner",
+      "source_canvas_id": 3001
+    },
+    {
+      "student_id": 1002,
+      "course_id": 2001,
+      "kind": "assignment",
+      "title": "Linear Equations Practice",
+      "starts_at_utc": null,
+      "due_at_utc": "2025-02-05T21:59:00Z",
+      "all_day_date": null,
+      "status": "completed",
+      "source": "canvas_planner+submission",
+      "source_canvas_id": 3001
+    },
+    {
+      "student_id": null,
+      "course_id": 2001,
+      "kind": "calendar_event",
+      "title": "Chapter 4 Quiz",
+      "starts_at_utc": "2025-02-07T15:00:00Z",
+      "due_at_utc": null,
+      "all_day_date": null,
+      "status": "scheduled",
+      "source": "canvas_calendar",
+      "source_canvas_id": 4001
+    },
+    {
+      "student_id": null,
+      "course_id": 2001,
+      "kind": "front_page_event",
+      "title": "Bring calculator",
+      "starts_at_utc": null,
+      "due_at_utc": null,
+      "all_day_date": "2025-02-07",
+      "status": "scheduled",
+      "source": "canvas_front_page",
+      "evidence": "Bring calculator on 2/7.",
+      "confidence": "high"
+    }
+  ]
+}

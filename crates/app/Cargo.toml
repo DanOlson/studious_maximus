@@ -9,6 +9,7 @@ chrono.workspace = true
 dotenvy.workspace = true
 reqwest = { workspace = true, optional = true }
 serde.workspace = true
+serde_json.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
 
@@ -33,6 +34,11 @@ required-features = ["write"]
 [[bin]]
 name = "load_all"
 path = "bin/load_all.rs"
+required-features = ["write"]
+
+[[bin]]
+name = "capture_canvas_fixtures"
+path = "bin/capture_canvas_fixtures.rs"
 required-features = ["write"]
 
 [features]
