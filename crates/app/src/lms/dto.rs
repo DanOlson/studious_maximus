@@ -13,6 +13,24 @@ pub struct Course {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct FrontPage {
+    #[serde(default)]
+    pub page_id: Option<i64>,
+    #[serde(default)]
+    pub url: Option<String>,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub body: Option<String>,
+    #[serde(default)]
+    pub updated_at: Option<String>,
+    #[serde(default)]
+    pub published: Option<bool>,
+    #[serde(default)]
+    pub front_page: Option<bool>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct Assignment {
     pub id: i32,
     pub due_at: Option<String>,

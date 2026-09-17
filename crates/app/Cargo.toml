@@ -10,6 +10,7 @@ dotenvy.workspace = true
 reqwest = { workspace = true, optional = true }
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
 
@@ -39,6 +40,11 @@ required-features = ["write"]
 [[bin]]
 name = "capture_canvas_fixtures"
 path = "bin/capture_canvas_fixtures.rs"
+required-features = ["write"]
+
+[[bin]]
+name = "list_canvas_ids"
+path = "bin/list_canvas_ids.rs"
 required-features = ["write"]
 
 [features]

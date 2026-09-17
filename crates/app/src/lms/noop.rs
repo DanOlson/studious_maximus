@@ -26,4 +26,11 @@ impl Lms for Noop {
     ) -> anyhow::Result<Vec<dto::Submission>> {
         Err(anyhow::anyhow!("Readonly mode!"))
     }
+
+    async fn get_course_front_page(
+        &self,
+        _course_id: i64,
+    ) -> anyhow::Result<Option<dto::FrontPage>> {
+        Err(anyhow::anyhow!("Readonly mode!"))
+    }
 }

@@ -6,6 +6,7 @@ mod tests;
 mod app;
 
 mod db;
+pub mod extraction;
 mod lms;
 pub mod models;
 mod prelude;
