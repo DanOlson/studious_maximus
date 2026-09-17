@@ -110,6 +110,12 @@ clear canonical representation.
 
 ## Step 3: Harden Synchronization
 
+Status: implemented foundation in `plans/sync-hardening/` and the sync code:
+centralized Canvas pagination, status checks, bounded retries/backoff, sequential
+assignment/submission refresh, explicit migrations, and recorded `sync_runs`.
+Planner-to-`schedule_items` ingestion and stale-item reconciliation are queued to
+land with the schedule query/API work.
+
 - Centralize Canvas pagination and always follow opaque `Link` URLs.
 - Check HTTP status codes and provide useful endpoint-specific errors.
 - Add bounded retries and backoff for throttling and transient failures.
