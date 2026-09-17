@@ -22,6 +22,13 @@ where
     database: D,
 }
 
+struct SyncCounts {
+    students_seen: usize,
+    courses_seen: usize,
+    assignments_seen: usize,
+    submissions_seen: usize,
+}
+
 impl<L, D> App<L, D>
 where
     L: Lms,
@@ -42,8 +49,9 @@ where
         Ok(students)
     }
 
-    pub async fn update_students(&self) -> anyhow::Result<()> {
+    pub async fn update_students(&self) -> anyhow::Result<usize> {
         let students = self.lms.get_students().await?;
+        let seen = students.len();
         let update = query::UpdateStudents {
             students: students
                 .into_iter()
@@ -55,7 +63,7 @@ where
         };
         self.database.query(&update).await?;
 
-        Ok(())
+        Ok(seen)
     }
 
     pub async fn get_courses(
@@ -68,10 +76,12 @@ where
         Ok(courses)
     }
 
-    pub async fn update_courses(&self) -> anyhow::Result<()> {
+    pub async fn update_courses(&self) -> anyhow::Result<usize> {
         let students = self.get_students(None).await?;
+        let mut seen = 0;
         for student in students {
             let courses = self.lms.get_active_courses(student.id).await?;
+            seen += courses.len();
             let update = query::UpdateCourses {
                 courses: courses
                     .into_iter()
@@ -86,7 +96,7 @@ where
             self.database.query(&update).await?;
         }
 
-        Ok(())
+        Ok(seen)
     }
 
     pub async fn get_assignments(
@@ -99,23 +109,73 @@ where
         Ok(assignments)
     }
 
-    pub async fn update_assignments(&self) -> anyhow::Result<()> {
+    pub async fn update_assignments(&self) -> anyhow::Result<(usize, usize)> {
         let courses = self.get_courses(None).await?;
+        let mut assignments_seen = 0;
+        let mut submissions_seen = 0;
         for course in courses {
-            tokio::try_join!(
-                self.upsert_assignments(&course),
-                self.upsert_submissions(&course),
-            )?;
+            // Deliberately sequential for Canvas friendliness and easier failure attribution.
+            assignments_seen += self.upsert_assignments(&course).await?;
+            submissions_seen += self.upsert_submissions(&course).await?;
         }
 
-        Ok(())
+        Ok((assignments_seen, submissions_seen))
     }
 
-    async fn upsert_assignments(&self, course: &models::Course) -> anyhow::Result<()> {
+    pub async fn sync_all(&self) -> anyhow::Result<()> {
+        let sync_run_id = self
+            .database
+            .query(&query::StartSyncRun {
+                sync_kind: "canvas_full".to_string(),
+            })
+            .await?;
+
+        let result = async {
+            let students_seen = self.update_students().await?;
+            let courses_seen = self.update_courses().await?;
+            let (assignments_seen, submissions_seen) = self.update_assignments().await?;
+            anyhow::Ok(SyncCounts {
+                students_seen,
+                courses_seen,
+                assignments_seen,
+                submissions_seen,
+            })
+        }
+        .await;
+
+        let finish = match &result {
+            Ok(counts) => query::FinishSyncRun {
+                id: sync_run_id,
+                status: query::SyncRunStatus::Succeeded,
+                students_seen: counts.students_seen as i64,
+                courses_seen: counts.courses_seen as i64,
+                assignments_seen: counts.assignments_seen as i64,
+                submissions_seen: counts.submissions_seen as i64,
+                schedule_items_seen: 0,
+                error: None,
+            },
+            Err(error) => query::FinishSyncRun {
+                id: sync_run_id,
+                status: query::SyncRunStatus::Failed,
+                students_seen: 0,
+                courses_seen: 0,
+                assignments_seen: 0,
+                submissions_seen: 0,
+                schedule_items_seen: 0,
+                error: Some(error.to_string()),
+            },
+        };
+        self.database.query(&finish).await?;
+
+        result.map(|_| ())
+    }
+
+    async fn upsert_assignments(&self, course: &models::Course) -> anyhow::Result<usize> {
         let assignments = self
             .lms
             .get_course_assignments(course.student_id, course.id)
             .await?;
+        let seen = assignments.len();
         let update = query::UpdateAssignments {
             assignments: assignments
                 .into_iter()
@@ -132,14 +192,15 @@ where
         };
         self.database.query(&update).await?;
 
-        Ok(())
+        Ok(seen)
     }
 
-    async fn upsert_submissions(&self, course: &models::Course) -> anyhow::Result<()> {
+    async fn upsert_submissions(&self, course: &models::Course) -> anyhow::Result<usize> {
         let submissions = self
             .lms
             .get_course_submissions(course.id, course.student_id)
             .await?;
+        let seen = submissions.len();
         let update = query::UpdateSubmissions {
             submissions: submissions
                 .into_iter()
@@ -159,7 +220,7 @@ where
         };
         self.database.query(&update).await?;
 
-        Ok(())
+        Ok(seen)
     }
 
     pub async fn get_submissions(
@@ -233,6 +294,7 @@ impl AppReadWrite {
         let canvas_token = std::env::var("CANVAS_TOKEN")?;
         let canvas_base_url = std::env::var("CANVAS_BASE_URL")?;
         let pool = SqlitePool::connect(&db_url).await?;
+        sqlx::migrate!("./migrations").run(&pool).await?;
         let database = SqlDatabase::new(pool);
         let lms = crate::lms::canvas::Client::new(canvas_base_url, &canvas_token);
 
@@ -246,6 +308,7 @@ impl AppReadonly {
 
         let db_url = std::env::var("DATABASE_URL")?;
         let pool = SqlitePool::connect(&db_url).await?;
+        sqlx::migrate!("./migrations").run(&pool).await?;
         let database = SqlDatabase::new(pool);
         let lms = crate::lms::noop::Noop;
 
