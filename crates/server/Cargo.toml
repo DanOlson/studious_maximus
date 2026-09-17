@@ -4,4 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-app = { path = "../app" }
+anyhow.workspace = true
+app = { path = "../app", default-features = false, features = ["read"] }
+axum.workspace = true
+chrono.workspace = true
+serde.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
