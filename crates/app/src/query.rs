@@ -4,6 +4,7 @@ use crate::prelude::Stable;
 
 mod assignments_query;
 mod courses_query;
+mod schedule_query;
 mod students_query;
 mod submissions_query;
 mod sync_runs;
@@ -14,6 +15,7 @@ mod update_submissions;
 
 pub use assignments_query::AssignmentsQuery;
 pub use courses_query::CoursesQuery;
+pub use schedule_query::{ScheduleItemsQuery, ScheduleStatusFilter, SyncHealthQuery};
 pub use students_query::StudentsQuery;
 pub use submissions_query::SubmissionsQuery;
 pub use sync_runs::{FinishSyncRun, StartSyncRun, SyncRunStatus};

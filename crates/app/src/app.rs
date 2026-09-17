@@ -267,6 +267,24 @@ where
         Ok(x)
     }
 
+    pub async fn get_schedule_items(
+        &self,
+        filters: models::ScheduleQueryFilters,
+        statuses: Vec<query::ScheduleStatusFilter>,
+    ) -> anyhow::Result<Vec<models::ScheduleItem>> {
+        let query = query::ScheduleItemsQuery {
+            filters,
+            statuses,
+            now_utc: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+        };
+
+        self.database.query(&query).await
+    }
+
+    pub async fn get_sync_health(&self) -> anyhow::Result<models::SyncHealth> {
+        self.database.query(&query::SyncHealthQuery).await
+    }
+
     pub async fn get_app_data(
         &self,
         filters: Option<AppDataFilters>,

@@ -9,7 +9,7 @@ mod db;
 mod lms;
 pub mod models;
 mod prelude;
-mod query;
+pub mod query;
 
 pub use app::{App, AppReadonly};
 #[cfg(feature = "write")]

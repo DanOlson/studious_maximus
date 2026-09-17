@@ -128,3 +128,54 @@ pub struct AppData {
     pub courses: Vec<Course>,
     pub assignments: Vec<AssignmentWithSubmissions>,
 }
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ScheduleQueryFilters {
+    pub student_id: Option<i64>,
+    pub start: Option<String>,
+    pub end: Option<String>,
+}
+
+#[derive(Clone, Debug, FromRow, Serialize, Deserialize)]
+pub struct ScheduleItem {
+    pub id: i64,
+    pub student_id: Option<i64>,
+    pub student_name: Option<String>,
+    pub course_id: Option<i64>,
+    pub course_name: Option<String>,
+    pub assignment_id: Option<i64>,
+    pub kind: String,
+    pub title: String,
+    pub starts_at_utc: Option<String>,
+    pub ends_at_utc: Option<String>,
+    pub due_at_utc: Option<String>,
+    pub all_day_date: Option<String>,
+    pub school_timezone: String,
+    pub status: String,
+    pub source: String,
+    pub source_canvas_id: Option<i64>,
+    pub confidence: Option<f64>,
+    pub evidence: Option<String>,
+    pub provenance_json: String,
+    pub active: i64,
+}
+
+#[derive(Clone, Debug, Default, FromRow, Serialize, Deserialize)]
+pub struct SyncHealth {
+    pub id: Option<i64>,
+    pub sync_kind: Option<String>,
+    pub status: Option<String>,
+    pub started_at_utc: Option<String>,
+    pub finished_at_utc: Option<String>,
+    #[serde(default)]
+    pub students_seen: i64,
+    #[serde(default)]
+    pub courses_seen: i64,
+    #[serde(default)]
+    pub assignments_seen: i64,
+    #[serde(default)]
+    pub submissions_seen: i64,
+    #[serde(default)]
+    pub schedule_items_seen: i64,
+    pub error: Option<String>,
+}
