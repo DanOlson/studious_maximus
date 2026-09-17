@@ -27,9 +27,9 @@ impl Query for SubmissionsQuery {
                   ,assignment_id
                   ,grade
                   ,score
-                  ,submitted_at
-                  ,graded_at
-                  ,posted_at
+                  ,submitted_at_utc as submitted_at
+                  ,graded_at_utc as graded_at
+                  ,posted_at_utc as posted_at
                   ,late
                   ,missing
             from submissions

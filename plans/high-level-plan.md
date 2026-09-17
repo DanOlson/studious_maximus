@@ -81,6 +81,11 @@ and the preferred source for each schedule field is documented.
 
 ## Step 2: Introduce the V2 Data Model
 
+Status: implemented in `plans/v2-data-model/` and the fresh-start SQLite
+migrations. The schema now separates shared Canvas courses/assignments from
+per-student enrollments, dates, submissions, schedule items, raw source document
+versions, extraction runs, and sync runs.
+
 Reshape storage around a per-student schedule rather than treating assignments
 as the complete product model. Existing production data/schema do not need to be
 preserved; the V2 work may replace migrations and start from a fresh database.

@@ -17,11 +17,13 @@ impl Query for UpdateStudents {
             return Ok(());
         }
 
-        QueryBuilder::new("insert into students (id, name)")
+        QueryBuilder::new("insert into students (id, canvas_user_id, name)")
             .push_values(self.students.iter(), |mut bld, student| {
-                bld.push_bind(student.id).push_bind(&student.name);
+                bld.push_bind(student.id)
+                    .push_bind(student.id)
+                    .push_bind(&student.name);
             })
-            .push(" on conflict(id) do nothing")
+            .push(" on conflict(id) do update set name = excluded.name, updated_at_utc = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')")
             .build()
             .execute(pool)
             .await?;

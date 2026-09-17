@@ -20,15 +20,14 @@ impl Query for UpdateAssignments {
         QueryBuilder::new(
             r#"
             insert into assignments
-            (id, student_id, course_id, name, due_at, points_possible, grading_type)
+            (id, canvas_assignment_id, course_id, name, points_possible, grading_type)
             "#,
         )
         .push_values(self.assignments.iter(), |mut bld, a| {
             bld.push_bind(a.id);
-            bld.push_bind(a.student_id);
+            bld.push_bind(a.id);
             bld.push_bind(a.course_id);
             bld.push_bind(&a.name);
-            bld.push_bind(&a.due_at);
             bld.push_bind(a.points_possible);
             bld.push_bind(&a.grading_type);
         })
@@ -36,9 +35,34 @@ impl Query for UpdateAssignments {
             r#"
             on conflict(id) do update
             set name = EXCLUDED.name,
-              due_at = EXCLUDED.due_at,
+              course_id = EXCLUDED.course_id,
               points_possible = EXCLUDED.points_possible,
-              grading_type = EXCLUDED.grading_type
+              grading_type = EXCLUDED.grading_type,
+              updated_at_utc = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+            "#,
+        )
+        .build()
+        .execute(pool)
+        .await?;
+
+        QueryBuilder::new(
+            r#"
+            insert into student_assignment_dates
+            (student_id, assignment_id, due_at_utc, source)
+            "#,
+        )
+        .push_values(self.assignments.iter(), |mut bld, a| {
+            bld.push_bind(a.student_id);
+            bld.push_bind(a.id);
+            bld.push_bind(&a.due_at);
+            bld.push_bind("canvas_assignment");
+        })
+        .push(
+            r#"
+            on conflict(student_id, assignment_id) do update
+            set due_at_utc = EXCLUDED.due_at_utc,
+              source = EXCLUDED.source,
+              observed_at_utc = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
             "#,
         )
         .build()
@@ -59,6 +83,15 @@ mod tests {
 
     #[sqlx::test]
     async fn insert_new_assignments(pool: SqlitePool) {
+        sqlx::query("insert into students (id, canvas_user_id, name) values (11, 11, 'Alice'), (22, 22, 'Bob')")
+            .execute(&pool)
+            .await
+            .unwrap();
+        sqlx::query("insert into courses (id, canvas_course_id, name) values (111, 111, 'Weather'), (222, 222, 'Cheese')")
+            .execute(&pool)
+            .await
+            .unwrap();
+
         let assignments = vec![
             Assignment {
                 id: 1,

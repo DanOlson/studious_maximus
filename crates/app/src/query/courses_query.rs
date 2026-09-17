@@ -23,13 +23,14 @@ impl Query for CoursesQuery {
     async fn exec(&self, pool: &SqlitePool) -> anyhow::Result<Self::Value> {
         let mut builder: QueryBuilder<Sqlite> = QueryBuilder::new(
             r#"
-            select id, student_id, name, enrollment_status
-            from courses
-            where enrollment_status = 'active'
+            select c.id, e.student_id, c.name, e.enrollment_status
+            from courses c
+            join student_course_enrollments e on e.course_id = c.id
+            where e.enrollment_status = 'active'
             "#,
         );
         if let Some(student_id) = &self.student_id {
-            builder.push(" and student_id = ").push_bind(student_id.0);
+            builder.push(" and e.student_id = ").push_bind(student_id.0);
         }
         let courses = builder
             .build()
