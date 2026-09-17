@@ -1,0 +1,17 @@
+[
+  {
+    "context_type": "Course",
+    "course_id": 2001,
+    "plannable_id": 3001,
+    "plannable_type": "assignment",
+    "plannable_date": "2025-02-04T21:59:00Z",
+    "plannable": {
+      "id": 3001,
+      "title": "Linear Equations Practice",
+      "due_at": "2025-02-04T21:59:00Z",
+      "points_possible": 10.0,
+      "html_url": "https://canvas.example.invalid/courses/2001/assignments/3001"
+    },
+    "submissions": { "submitted": false, "missing": true, "late": false }
+  }
+]

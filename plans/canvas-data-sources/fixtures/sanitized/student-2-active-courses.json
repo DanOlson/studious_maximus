@@ -1,0 +1,4 @@
+[
+  { "id": 2001, "name": "Sample Algebra", "course_code": "ALG-1", "workflow_state": "available" },
+  { "id": 2003, "name": "Sample Science", "course_code": "SCI-1", "workflow_state": "available" }
+]

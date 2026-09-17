@@ -1,0 +1,15 @@
+[
+  {
+    "id": 6001,
+    "user_id": 1001,
+    "assignment_id": 3001,
+    "grade": null,
+    "score": null,
+    "submitted_at": null,
+    "graded_at": null,
+    "posted_at": null,
+    "workflow_state": "unsubmitted",
+    "late": false,
+    "missing": true
+  }
+]
