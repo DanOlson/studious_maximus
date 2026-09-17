@@ -21,19 +21,21 @@ impl Query for UpdateSubmissions {
             r#"
             insert into submissions (
                 id,
+                canvas_submission_id,
                 student_id,
                 assignment_id,
                 grade,
                 score,
-                submitted_at,
-                graded_at,
-                posted_at,
+                submitted_at_utc,
+                graded_at_utc,
+                posted_at_utc,
                 late,
                 missing
             )
             "#,
         )
         .push_values(self.submissions.iter(), |mut bld, sub| {
+            bld.push_bind(sub.id);
             bld.push_bind(sub.id);
             bld.push_bind(sub.student_id);
             bld.push_bind(sub.assignment_id);
@@ -50,9 +52,9 @@ impl Query for UpdateSubmissions {
             on conflict(id) do update
             set grade=excluded.grade,
                 score=excluded.score,
-                submitted_at=excluded.submitted_at,
-                graded_at=excluded.graded_at,
-                posted_at=excluded.posted_at,
+                submitted_at_utc=excluded.submitted_at_utc,
+                graded_at_utc=excluded.graded_at_utc,
+                posted_at_utc=excluded.posted_at_utc,
                 late=excluded.late,
                 missing=excluded.missing
             "#,
@@ -75,6 +77,19 @@ mod tests {
 
     #[sqlx::test]
     async fn insert_new_submissions(pool: SqlitePool) {
+        sqlx::query("insert into students (id, canvas_user_id, name) values (11, 11, 'Alice')")
+            .execute(&pool)
+            .await
+            .unwrap();
+        sqlx::query("insert into courses (id, canvas_course_id, name) values (1, 1, 'Course')")
+            .execute(&pool)
+            .await
+            .unwrap();
+        sqlx::query("insert into assignments (id, canvas_assignment_id, course_id, name) values (111, 111, 1, 'One'), (123, 123, 1, 'Two')")
+            .execute(&pool)
+            .await
+            .unwrap();
+
         let submissions = vec![
             Submission {
                 id: 1,

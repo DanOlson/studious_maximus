@@ -1,7 +1,1 @@
-create table if not exists courses (
-  id INTEGER PRIMARY KEY NOT NULL,
-  student_id INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  enrollment_status TEXT NOT NULL
-);
-
+-- V2 schema is created from scratch in 20250330193857_create_students.sql.

@@ -17,17 +17,29 @@ impl Query for UpdateCourses {
             return Ok(());
         }
 
-        QueryBuilder::new("insert into courses (id, student_id, name, enrollment_status)")
+        QueryBuilder::new("insert into courses (id, canvas_course_id, name)")
             .push_values(self.courses.iter(), |mut bld, course| {
                 bld.push_bind(course.id);
-                bld.push_bind(course.student_id);
+                bld.push_bind(course.id);
                 bld.push_bind(&course.name);
-                bld.push_bind(course.enrollment_status.to_string().clone());
             })
-            .push(" on conflict(id) do nothing")
+            .push(" on conflict(id) do update set name = excluded.name, updated_at_utc = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')")
             .build()
             .execute(pool)
             .await?;
+
+        QueryBuilder::new(
+            "insert into student_course_enrollments (student_id, course_id, enrollment_status)",
+        )
+        .push_values(self.courses.iter(), |mut bld, course| {
+            bld.push_bind(course.student_id);
+            bld.push_bind(course.id);
+            bld.push_bind(course.enrollment_status.to_string());
+        })
+        .push(" on conflict(student_id, course_id) do update set enrollment_status = excluded.enrollment_status, observed_at_utc = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')")
+        .build()
+        .execute(pool)
+        .await?;
 
         Ok(())
     }
@@ -50,6 +62,11 @@ mod tests {
 
     #[sqlx::test]
     fn insert_courses(pool: SqlitePool) {
+        sqlx::query("insert into students (id, canvas_user_id, name) values (13, 13, 'Tester')")
+            .execute(&pool)
+            .await
+            .unwrap();
+
         let update = UpdateCourses {
             courses: vec![
                 Course {
