@@ -54,6 +54,7 @@ fn create_router(app: Arc<AppReadonly>) -> Router {
         .route("/api/completed", get(api_completed))
         .route("/api/recently-graded", get(api_recently_graded))
         .route("/api/health", get(api_health))
+        .route("/api/extractions", get(api_extractions))
         .with_state(state)
 }
 
@@ -161,6 +162,12 @@ async fn api_recently_graded(
 
 async fn api_health(State(state): State<ServerState>) -> Result<axum::Json<SyncHealth>, AppError> {
     Ok(axum::Json(state.app.get_sync_health().await?))
+}
+
+async fn api_extractions(
+    State(state): State<ServerState>,
+) -> Result<axum::Json<Vec<app::query::ExtractionRunSummary>>, AppError> {
+    Ok(axum::Json(state.app.get_extraction_runs().await?))
 }
 
 async fn api_items(

@@ -179,3 +179,23 @@ pub struct SyncHealth {
     pub schedule_items_seen: i64,
     pub error: Option<String>,
 }
+
+#[derive(Clone, Debug)]
+pub struct CourseFrontPage {
+    pub course_id: i64,
+    pub page_id: Option<i64>,
+    pub title: String,
+    pub url: Option<String>,
+    pub body: String,
+    pub content_hash: String,
+    pub updated_at: Option<String>,
+    pub published: Option<bool>,
+    pub front_page: Option<bool>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StoredDocumentVersion {
+    pub document_id: i64,
+    pub version_id: i64,
+    pub is_new: bool,
+}

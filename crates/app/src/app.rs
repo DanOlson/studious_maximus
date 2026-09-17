@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
+use chrono::Datelike;
 use sqlx::SqlitePool;
 
 use crate::{
     db::{self, SqlDatabase},
+    extraction,
     lms::{Lms, noop},
     models::{self, AppDataFilters},
     query,
@@ -27,6 +29,7 @@ struct SyncCounts {
     courses_seen: usize,
     assignments_seen: usize,
     submissions_seen: usize,
+    schedule_items_seen: usize,
 }
 
 impl<L, D> App<L, D>
@@ -122,6 +125,78 @@ where
         Ok((assignments_seen, submissions_seen))
     }
 
+    pub async fn sync_front_pages(&self) -> anyhow::Result<usize> {
+        let courses = self.get_courses(None).await?;
+        let mut schedule_items_seen = 0;
+
+        for course in courses {
+            let Some(page) = self.lms.get_course_front_page(course.id).await? else {
+                continue;
+            };
+            let body = page.body.unwrap_or_default();
+            if body.trim().is_empty() {
+                continue;
+            }
+
+            let body_for_extraction = body.clone();
+            let stored = self
+                .database
+                .query(&query::StoreFrontPageVersion {
+                    page: models::CourseFrontPage {
+                        course_id: course.id,
+                        page_id: page.page_id,
+                        title: page.title.unwrap_or_else(|| "Front page".to_string()),
+                        url: page.url,
+                        content_hash: extraction::content_hash(&body),
+                        body,
+                        updated_at: page.updated_at,
+                        published: page.published,
+                        front_page: page.front_page,
+                    },
+                })
+                .await?;
+
+            if !stored.is_new {
+                continue;
+            }
+
+            let school_year_start = std::env::var("SCHOOL_YEAR_START")
+                .ok()
+                .and_then(|year| year.parse::<i32>().ok())
+                .unwrap_or_else(|| chrono::Utc::now().date_naive().year());
+            let items =
+                extraction::extract_deterministic_items(&body_for_extraction, school_year_start);
+            let confidence = if items.is_empty() {
+                None
+            } else {
+                Some(items.iter().map(|item| item.confidence).sum::<f64>() / items.len() as f64)
+            };
+            let output_json = serde_json::to_string(&items)?;
+            let extraction_run_id = self
+                .database
+                .query(&query::RecordExtractionRun {
+                    source_document_version_id: stored.version_id,
+                    parser_version: extraction::PARSER_VERSION.to_string(),
+                    output_json,
+                    confidence,
+                    error: None,
+                })
+                .await?;
+            schedule_items_seen += self
+                .database
+                .query(&query::UpsertExtractedScheduleItems {
+                    course_id: course.id,
+                    source_document_version_id: stored.version_id,
+                    extraction_run_id,
+                    school_timezone: "America/Chicago".to_string(),
+                    items,
+                })
+                .await?;
+        }
+
+        Ok(schedule_items_seen)
+    }
+
     pub async fn sync_all(&self) -> anyhow::Result<()> {
         let sync_run_id = self
             .database
@@ -134,11 +209,13 @@ where
             let students_seen = self.update_students().await?;
             let courses_seen = self.update_courses().await?;
             let (assignments_seen, submissions_seen) = self.update_assignments().await?;
+            let schedule_items_seen = self.sync_front_pages().await?;
             anyhow::Ok(SyncCounts {
                 students_seen,
                 courses_seen,
                 assignments_seen,
                 submissions_seen,
+                schedule_items_seen,
             })
         }
         .await;
@@ -151,7 +228,7 @@ where
                 courses_seen: counts.courses_seen as i64,
                 assignments_seen: counts.assignments_seen as i64,
                 submissions_seen: counts.submissions_seen as i64,
-                schedule_items_seen: 0,
+                schedule_items_seen: counts.schedule_items_seen as i64,
                 error: None,
             },
             Err(error) => query::FinishSyncRun {
@@ -283,6 +360,10 @@ where
 
     pub async fn get_sync_health(&self) -> anyhow::Result<models::SyncHealth> {
         self.database.query(&query::SyncHealthQuery).await
+    }
+
+    pub async fn get_extraction_runs(&self) -> anyhow::Result<Vec<query::ExtractionRunSummary>> {
+        self.database.query(&query::LatestExtractionRunsQuery).await
     }
 
     pub async fn get_app_data(
